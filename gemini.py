@@ -1,7 +1,7 @@
 import google.generativeai as genai
 import PIL.Image
 
-GOOGLE_API_KEY="AIzaSyBQVgx4TNpNoVrTeBSQINND-JKZYmdYHEk"
+GOOGLE_API_KEY=""
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('models/gemini-1.5-pro')
 
