@@ -5,10 +5,10 @@ import geocoder
 
 from file import file
 
-naver_client_id = 'glb0gfor6m'
-naver_client_secret = 'Nc7MTdjiVg2VUCdEki0IXjm59j5FLwAAfu4p73rY'
-odsay_secret = 'VYHh//C1T/566H9k3t1PrAurE2nh1VVxFYwT08637Fk'
-sk_secret = 'PA42941D6i1vXYkzyNQ6r9nvYbUghfh4aeDmMHnz'
+naver_client_id = ''
+naver_client_secret = ''
+odsay_secret = ''
+sk_secret = ''
 
 def get_location(loc) :
     url = f"https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=" \
