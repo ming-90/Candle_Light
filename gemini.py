@@ -1,7 +1,7 @@
 import google.generativeai as genai
 import PIL.Image
 
-GOOGLE_API_KEY=""
+GOOGLE_API_KEY="AIzaSyBQVgx4TNpNoVrTeBSQINND-JKZYmdYHEk"
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('models/gemini-1.5-pro')
 
@@ -27,4 +27,9 @@ def gemini_image(path):
     print(response.text)
 
 # gemini_audio('asd')
-gemini_image('asd')
+# gemini_image('asd')
+text = '''
+출발지 : 126.8463,37.313393
+도착지 : 126.838745,37.316147
+'''
+gemini_text(text + "내가 보내준 위경도로 길 안내 해 줄수 있어?")

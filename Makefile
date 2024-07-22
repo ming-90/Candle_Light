@@ -3,3 +3,6 @@ env:
 
 setup:
 	pip install -r requirements.txt
+
+conda:
+	conda activate voice_helper
