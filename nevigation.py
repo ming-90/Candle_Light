@@ -1,11 +1,12 @@
 import urllib
 import json
-from urllib.request import Request, urlopen
+import requests
 import geocoder
 from shapely.geometry import Point, LineString
 import math
 
-from file import file
+from data.file import file
+from data.file2 import file as file2
 
 naver_client_id = 'glb0gfor6m'
 naver_client_secret = 'Nc7MTdjiVg2VUCdEki0IXjm59j5FLwAAfu4p73rY'
@@ -13,22 +14,22 @@ odsay_secret = 'VYHh//C1T/566H9k3t1PrAurE2nh1VVxFYwT08637Fk'
 sk_secret = 'PA42941D6i1vXYkzyNQ6r9nvYbUghfh4aeDmMHnz'
 
 def get_location(loc) :
-    url = f"https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=" \
-            + urllib.parse.quote(loc)
+    url = f"https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query={loc}"
 
-    # 주소 변환
-    request = urllib.request.Request(url)
-    request.add_header('X-NCP-APIGW-API-KEY-ID', naver_client_id)
-    request.add_header('X-NCP-APIGW-API-KEY', naver_client_secret)
+    # 헤더 설정
+    headers = {
+        'X-NCP-APIGW-API-KEY-ID': naver_client_id,
+        'X-NCP-APIGW-API-KEY': naver_client_secret
+    }
 
-    response = urlopen(request)
-    res = response.getcode()
+    # 요청 보내기
+    response = requests.get(url, headers=headers)
 
-    if (res == 200) : # 응답이 정상적으로 완료되면 200을 return한다
-        response_body = response.read().decode('utf-8')
-        response_body = json.loads(response_body)
-        print(response_body)
-        # 주소가 존재할 경우 total count == 1이 반환됨.
+    # 응답 처리
+    res_code = response.status_code
+    response_body = response.json()
+
+    if (res_code == 200) : # 응답이 정상적으로 완료되면 200을 return한다
         if response_body['meta']['totalCount'] == 1 :
             # 위도, 경도 좌표를 받아와서 return해 줌.
             lat = response_body['addresses'][0]['y']
@@ -40,22 +41,7 @@ def get_location(loc) :
     else :
         print('ERROR')
 
-def get_optimal_route(start, goal, option='' ) :
 
-    encoded_api_key = urllib.parse.quote(odsay_secret, safe='')
-    urlInfo = f"https://api.odsay.com/v1/api/searchPubTransPathT?lang=0&"\
-            + f"SX={start[0]}&SY={start[1]}&EX={end[0]}&EY={end[1]}"\
-            + f"&apiKey={encoded_api_key}"
-
-    request = urllib.request.Request(urlInfo)
-
-    response = urlopen(request)
-    res = response.getcode()
-
-    if (res == 200) : # 응답이 정상적으로 완료되면 200을 return한다
-        response_body = response.read().decode('utf-8')
-        response_body = json.loads(response_body)
-        print(response_body)
 
 def get_gps():
     g = geocoder.ip('me')
@@ -87,32 +73,11 @@ def line_locate(current_location, point):
     print(is_on_line)  # True 또는 False를 반환합니다.
 
 
-def haversine(coord1, coord2):
-    # 지구의 반지름 (킬로미터 단위)
-    R = 6371.0
 
-    # 위도와 경도를 라디안 단위로 변환
-    lat1, lon1 = math.radians(coord1[1]), math.radians(coord1[0])
-    lat2, lon2 = math.radians(coord2[1]), math.radians(coord2[0])
-
-    # 위도와 경도의 차이 계산
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-
-    # Haversine 공식을 사용하여 거리 계산
-    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-    # 두 점 사이의 거리 (킬로미터 단위)
-    distance_km = R * c
-
-    # 거리 변환 (미터 단위)
-    distance_m = distance_km * 1000
-
-    return distance_m
-
-start = "경기도 안산시 상록구 이동 645-4"
-end = "서울시 영등포구 양평로 157 선유도투웨니퍼스트밸리"
+# start = "서울 종로구 사직로8길 31 서울경찰청"
+# point1 = (126.9720724,37.5750599)
+# end = "서울 중구 세종대로 40"
+# point2 = (126.9753282,37.5599922)
 # start = get_location(start)
 # end = get_location(end)
 
@@ -120,17 +85,97 @@ end = "서울시 영등포구 양평로 157 선유도투웨니퍼스트밸리"
 
 # get_gps()
 # get_location_from_file()
-point1 = (126.8463,37.313393)
-point2 = (126.84635,37.31414)
+
 
 # print(haversine(point1, point2))
 # print(file['metaData']['plan']['itineraries'][0]['legs'][0])
-aa = 0
-print(file['metaData']['plan']['itineraries'][0]['legs'][aa]['steps'])
-# print(file['metaData']['plan']['itineraries'][0]['legs'][aa]['mode'])
+# aa = 0
+# end_list = []
+# walk_list = []
+# print(file['metaData']['plan']['itineraries'][0]['legs'][aa])
+# steps = file2['metaData']['plan']['itineraries'][0]['legs'][aa]['steps']
+# for step in steps:
+#     walk_list.append(step['linestring'].split(' '))
 
-# line_locate((126.84627, 37.313635), [point1,point2])
+# for i in walk_list:
+#     for j in i:
+#         end_list.append(j.split(','))
+
+# print(end_list)
 
 class Navigation:
-    def __init__(self):
-        self.status = 0
+    def __init__(self, start, end):
+        self.start = get_location(start)
+        self.end = get_location(end)
+        self.get_optimal_route(self.start, self.end)
+
+    def get_optimal_route(self, start, end, option='' ) :
+        url = 'https://apis.openapi.sk.com/transit/routes'
+        headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'appKey': sk_secret
+        }
+        data = {
+            "startX": start[0],
+            "startY": start[1],
+            "endX": end[0],
+            "endY": end[1]
+        }
+
+        # Real data
+        # response = requests.post(url, headers=headers, json=data)
+        # data = response.json()
+
+        # Test
+        data = file2
+
+        self.turn_point = []
+        steps = data['metaData']['plan']['itineraries'][0]['legs'][0]['steps']
+        for step in steps:
+            self.turn_point.append(step['linestring'].split(' ')[-1].split(','))
+
+    def haversine(self, coord1, coord2):
+        # 지구의 반지름 (킬로미터 단위)
+        R = 6371.0
+
+        # 위도와 경도를 라디안 단위로 변환
+        lat1, lon1 = math.radians(float(coord1[1])), math.radians(float(coord1[0]))
+        lat2, lon2 = math.radians(float(coord2[1])), math.radians(float(coord2[0]))
+
+        # 위도와 경도의 차이 계산
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+
+        # Haversine 공식을 사용하여 거리 계산
+        a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        # 두 점 사이의 거리 (킬로미터 단위)
+        distance_km = R * c
+
+        # 거리 변환 (미터 단위)
+        distance_m = distance_km * 1000
+
+        return distance_m
+
+    def direction(self, p1, p2, p3):
+        # 벡터1: p1 -> p2
+        p1 = [float(i) for i in p1]
+        p2 = [float(i) for i in p2]
+        p3 = [float(i) for i in p3]
+
+        vector1 = (p2[0] - p1[0], p2[1] - p1[1])
+
+        # 벡터2: p1 -> p3
+        vector2 = (p3[0] - p1[0], p3[1] - p1[1])
+
+        # 외적 계산 (벡터의 z 성분만 필요)
+        cross_product = vector1[0] * vector2[1] - vector1[1] * vector2[0]
+
+        if cross_product > 0:
+            return "좌회전"
+        elif cross_product < 0:
+            return "우회전"
+        else:
+            return "직진"
