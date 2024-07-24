@@ -2,13 +2,15 @@ import urllib
 import json
 from urllib.request import Request, urlopen
 import geocoder
+from shapely.geometry import Point, LineString
+import math
 
 from file import file
 
-naver_client_id = ''
-naver_client_secret = ''
-odsay_secret = ''
-sk_secret = ''
+naver_client_id = 'glb0gfor6m'
+naver_client_secret = 'Nc7MTdjiVg2VUCdEki0IXjm59j5FLwAAfu4p73rY'
+odsay_secret = 'VYHh//C1T/566H9k3t1PrAurE2nh1VVxFYwT08637Fk'
+sk_secret = 'PA42941D6i1vXYkzyNQ6r9nvYbUghfh4aeDmMHnz'
 
 def get_location(loc) :
     url = f"https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=" \
@@ -60,11 +62,54 @@ def get_gps():
     latitude = g.latlng[0]
     longitude = g.latlng[1]
 
-    print(f"위도: {latitude}, 경도: {longitude}")
+    return latitude, longitude
+
 
 def get_location_from_file():
-    aa = file['metaData']['plan']['itineraries'][0]['legs'][1]
-    print(aa)
+    steps = file['metaData']['plan']['itineraries'][0]['legs'][0]['steps']
+
+    linestring = []
+    for step in steps:
+        linestring += step['linestring'].split(' ')
+
+    print(linestring)
+
+def line_locate(current_location, point):
+    line = LineString(point)
+
+    # 현재 위치를 Shapely Point 객체로 변환합니다.
+    current_point = Point(current_location)
+
+    # 선분 위에 있는지 확인합니다.
+    # 현재 위치가 선분 위에 있거나, 선분의 경계점에 있는 경우 True를 반환합니다.
+    is_on_line = line.distance(current_point) < 1e-4  # 허용 오차를 사용하여 부동 소수점 비교
+
+    print(is_on_line)  # True 또는 False를 반환합니다.
+
+
+def haversine(coord1, coord2):
+    # 지구의 반지름 (킬로미터 단위)
+    R = 6371.0
+
+    # 위도와 경도를 라디안 단위로 변환
+    lat1, lon1 = math.radians(coord1[1]), math.radians(coord1[0])
+    lat2, lon2 = math.radians(coord2[1]), math.radians(coord2[0])
+
+    # 위도와 경도의 차이 계산
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    # Haversine 공식을 사용하여 거리 계산
+    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    # 두 점 사이의 거리 (킬로미터 단위)
+    distance_km = R * c
+
+    # 거리 변환 (미터 단위)
+    distance_m = distance_km * 1000
+
+    return distance_m
 
 start = "경기도 안산시 상록구 이동 645-4"
 end = "서울시 영등포구 양평로 157 선유도투웨니퍼스트밸리"
@@ -74,4 +119,18 @@ end = "서울시 영등포구 양평로 157 선유도투웨니퍼스트밸리"
 # get_optimal_route(start, end, option='')
 
 # get_gps()
-get_location_from_file()
+# get_location_from_file()
+point1 = (126.8463,37.313393)
+point2 = (126.84635,37.31414)
+
+# print(haversine(point1, point2))
+# print(file['metaData']['plan']['itineraries'][0]['legs'][0])
+aa = 0
+print(file['metaData']['plan']['itineraries'][0]['legs'][aa]['steps'])
+# print(file['metaData']['plan']['itineraries'][0]['legs'][aa]['mode'])
+
+# line_locate((126.84627, 37.313635), [point1,point2])
+
+class Navigation:
+    def __init__(self):
+        self.status = 0
