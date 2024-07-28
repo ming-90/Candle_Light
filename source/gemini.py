@@ -1,8 +1,13 @@
+import os
 import google.generativeai as genai
 import PIL.Image
+from dotenv import load_dotenv
 
-GOOGLE_API_KEY="AIzaSyBUviRQ_hIoFSLKx-K6opZf_CueU9wuNW0"
-genai.configure(api_key=GOOGLE_API_KEY)
+load_dotenv()
+
+google_secret=os.environ.get('GOOGLE_SECRET')
+
+genai.configure(api_key=google_secret)
 model = genai.GenerativeModel('models/gemini-1.5-pro')
 
 class Gemini:
