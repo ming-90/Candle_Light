@@ -43,7 +43,7 @@ def main():
     print("3. 출발지, 도착지 좌표 가져오기")
     navi.get_optimal_route(start_loc, end_loc)
 
-    leg_count = 1
+    leg_count = 0
     walk_count = 0
 
     my_walk = 0 # TODO : Test data
@@ -72,32 +72,46 @@ def main():
                     leg['steps'][walk_count+1]['linestring'].split(' ')[-1].split(',')
                 )
 
-                print(f"네비게이션 : {distance} m 앞 {turn} 입니다")
+                print(f"네비게이션 WALK : {distance} m 앞 {turn} 입니다")
 
                 if distance < 3:
                     walk_count += 1
-
 
             except IndexError as I:
                 if distance < 3:
                     walk_count = 0
                     leg_count += 1
-                    my_walk = 0 # TODO delete : Test data
 
             my_walk += 1 # TODO delete : Test data
 
             time.sleep(1)
 
         elif mode == "BUS":
+            # 버스 검색
             if not check_bus:
                 bus_image = 'data/bus.jpeg' # TODO : 이미지를 받아 올수 있는 방법으로 변경
                 bus_num = gemini.image(bus_image)
 
                 if re.findall(r'\d+', leg['route'])[0] == bus_num:
+                    print(f"네비게이션 BUS : {bus_num}번 버스 탑승 입니다")
                     check_bus = True
 
-            # linestring = leg['passShape']['linestring'].split(' ')[-1].split(',')
-            # print(linestring)
+            # 버스 탑승
+            else:
+                my_location = walk[my_walk]
+                # linestring = [leg['end']['loc'], leg['end']['lat']]
+                linestring = leg['passShape']['linestring'].split(' ')[-1].split(',')
+                station = leg['end']['name']
+                distance = navi.haversine(my_location, linestring)
+                distance = round(distance)
+
+                print(f"네비게이션 BUS : {distance} m 앞에 {station} 하차 입니다.")
+
+                if distance < 10:
+                    leg_count += 1
+
+                my_walk += 1  # TODO delete : Test data
+
             time.sleep(1)
         elif mode == "SUBWAY":
             print('SUBWAY')
