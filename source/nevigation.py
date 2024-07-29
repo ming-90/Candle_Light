@@ -74,7 +74,7 @@ class Navigation:
             "endY": end[1]
         }
 
-        # Real data
+        # TODO : Real data
         # response = requests.post(url, headers=headers, json=data)
         # data = response.json()
 
@@ -82,9 +82,7 @@ class Navigation:
         data = file2
 
         self.turn_point = []
-        steps = data['metaData']['plan']['itineraries'][0]['legs'][0]['steps']
-        for step in steps:
-            self.turn_point.append(step['linestring'].split(' ')[-1].split(','))
+        self.turn_point = data['metaData']['plan']['itineraries'][0]['legs']
 
     def haversine(self, coord1, coord2):
         # 지구의 반지름 (킬로미터 단위)
