@@ -26,12 +26,12 @@ class Gemini:
         return response.text
 
     def image(self, path):
-        prompt = "버스의 번호를 알려줘"
-        sample_file = genai.upload_file(path="data/bus.jpeg",
+        prompt = "버스의 번호만 답변으로 줘. 예를 들어 '100', '200' 와 같이 알려줘.'"
+        sample_file = genai.upload_file(path=path,
                                 display_name="Jetpack drawing")
         response = model.generate_content([sample_file, prompt])
 
-        print(response.text)
+        return response.text
 
 
 # GOOGLE_API_KEY="AIzaSyBUviRQ_hIoFSLKx-K6opZf_CueU9wuNW0"
@@ -43,9 +43,5 @@ class Gemini:
 # print(response.text)
 # gemini_audio('asd')
 # gemini_image('asd')
-# text = '''
-# 출발지 : 126.8463,37.313393
-# 도착지 : 126.838745,37.316147
-# '''
-# gemini_text(text + "내가 보내준 위경도로 길 안내 해 줄수 있어?")
+
 
