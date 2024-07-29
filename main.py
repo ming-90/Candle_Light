@@ -1,5 +1,5 @@
 import time
-
+import re
 from data.walk import walk
 
 from source import *
@@ -43,27 +43,64 @@ def main():
     print("3. 출발지, 도착지 좌표 가져오기")
     navi.get_optimal_route(start_loc, end_loc)
 
-    walking = 0
+    leg_count = 1
+    walk_count = 0
+
+    my_walk = 0 # TODO : Test data
+    check_bus = False
     print("4. GPS 좌표 가져오기")
     while True:
         ## 현재 위치 받아 오기
-        # my_location = get_gps() # Real location
-        my_location = walk[walking] # Test location
+        # my_location = get_gps() # TODO : Real location
+        my_location = walk[my_walk] # TODO delete : Test location
 
-        ## 현재 위치와 다음 포인트 까지 거리 계산
-        distance = navi.haversine(my_location, navi.turn_point[0])
-        distance = round(distance)
+        leg = navi.turn_point[leg_count]
+        mode = leg['mode']
 
-        ## 다음 포인트에서 방향 (좌회전, 우회전) 계산
-        turn = navi.direction(my_location, navi.turn_point[0], navi.turn_point[1])
+        if mode == "WALK":
+            linestring = leg['steps'][walk_count]['linestring'].split(' ')[-1].split(',')
 
-        print(f"네비게이션 : {distance} m 앞 {turn} 입니다")
+            # 현재 위치와 다음 포인트 까지 거리 계산
+            distance = navi.haversine(my_location, linestring)
+            distance = round(distance)
 
-        if distance < 3:
-            del navi.turn_point[0]
+            try:
+                # 다음 포인트에서 방향 (좌회전, 우회전) 계산
+                turn = navi.direction(
+                    my_location,
+                    linestring,
+                    leg['steps'][walk_count+1]['linestring'].split(' ')[-1].split(',')
+                )
 
-        time.sleep(2)
-        walking += 1
+                print(f"네비게이션 : {distance} m 앞 {turn} 입니다")
 
+                if distance < 3:
+                    walk_count += 1
+
+
+            except IndexError as I:
+                if distance < 3:
+                    walk_count = 0
+                    leg_count += 1
+                    my_walk = 0 # TODO delete : Test data
+
+            my_walk += 1 # TODO delete : Test data
+
+            time.sleep(1)
+
+        elif mode == "BUS":
+            if not check_bus:
+                bus_image = 'data/bus.jpeg' # TODO : 이미지를 받아 올수 있는 방법으로 변경
+                bus_num = gemini.image(bus_image)
+
+                if re.findall(r'\d+', leg['route'])[0] == bus_num:
+                    check_bus = True
+
+            # linestring = leg['passShape']['linestring'].split(' ')[-1].split(',')
+            # print(linestring)
+            time.sleep(1)
+        elif mode == "SUBWAY":
+            print('SUBWAY')
+            time.sleep(1)
 
 main()
