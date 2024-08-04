@@ -16,7 +16,7 @@ if 'start_text' not in st.session_state:
 if 'end_text' not in st.session_state:
     st.session_state.end_text = ""
 if 'count' not in st.session_state:
-    st.session_state.count = 3
+    st.session_state.count = 0
 if 'walk' not in st.session_state:
     st.session_state.walk = []
 if 'walk_count' not in st.session_state:
