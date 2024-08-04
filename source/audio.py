@@ -35,6 +35,7 @@ class Audio():
     def recorde(self, output_wav, output_mp3):
         self.__record_audio(output_wav)
         self.__convert_wav_to_mp3(output_wav, output_mp3)
+        return output_mp3
 
 # 오디오 녹음 및 WAV 파일 저장
 # output_wav = "data/output.wav"
