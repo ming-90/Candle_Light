@@ -13,7 +13,6 @@ load_dotenv()
 
 naver_client_id = os.environ.get('NAVER_ID')
 naver_client_secret = os.environ.get('NAVER_SECRET')
-odsay_secret = os.environ.get('ODSAY_SECRET')
 sk_secret = os.environ.get('SK_SECRET')
 
 class Navigation:
@@ -73,13 +72,13 @@ class Navigation:
             "endY": end[1]
         }
 
-        try:
-            # TODO : Real data
-            response = requests.post(url, headers=headers, json=data)
-            data = response.json()
-        except Exception as e:
-            # Test
-            data = file
+        # try:
+        #     # TODO : Real data
+        #     response = requests.post(url, headers=headers, json=data)
+        #     data = response.json()
+        # except Exception as e:
+        #     # Test
+        data = file
 
         self.turn_point = []
         self.turn_point = data['metaData']['plan']['itineraries'][0]['legs']

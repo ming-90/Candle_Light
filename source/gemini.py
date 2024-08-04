@@ -32,16 +32,3 @@ class Gemini:
         response = model.generate_content([sample_file, prompt])
 
         return response.text
-
-
-# GOOGLE_API_KEY="AIzaSyBUviRQ_hIoFSLKx-K6opZf_CueU9wuNW0"
-# genai.configure(api_key=GOOGLE_API_KEY)
-# model = genai.GenerativeModel('models/gemini-1.5-pro')
-# text = "넌 누구야"
-# response = model.generate_content(text)
-
-# print(response.text)
-# gemini_audio('asd')
-# gemini_image('asd')
-
-
