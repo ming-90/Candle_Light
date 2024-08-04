@@ -7,8 +7,7 @@ from shapely.geometry import Point, LineString
 import math
 from dotenv import load_dotenv
 
-from data.file import file
-from data.file2 import file as file2
+from sample.file import file
 
 load_dotenv()
 
@@ -79,7 +78,7 @@ class Navigation:
         # data = response.json()
 
         # Test
-        data = file2
+        data = file
 
         self.turn_point = []
         self.turn_point = data['metaData']['plan']['itineraries'][0]['legs']
@@ -128,3 +127,38 @@ class Navigation:
             return "우회전"
         else:
             return "직진"
+
+    def traffic_location(self):
+        traffic = []
+        for leg in self.turn_point:
+            route = ''
+            if leg['mode'] == 'BUS':
+                route = leg['route']
+            traffic += [{
+                'mode': leg['mode'],
+                'start': [leg['start']['lat'], leg['start']['lon']],
+                'end': [leg['end']['lat'], leg['end']['lon']],
+                'route': route
+            }]
+        return traffic
+
+    def move_coor(self):
+        '''
+        테스트용 함수.
+        실제로 걸어가면서 테스트 할 수 없기 때문에 네비게이션 데이터에서
+        이동하는 좌표들을 모아 내 위치를 표시
+        '''
+        move = []
+        for leg in self.turn_point:
+            linestring = []
+            if leg['mode'] == 'WALK':
+                for step in leg['steps']:
+                    result = [list(map(float, coordinate.split(','))) for coordinate in step['linestring'].split()]
+                    linestring.extend(result)
+                move += linestring
+
+            elif leg['mode'] == 'BUS':
+                result = [list(map(float, coordinate.split(','))) for coordinate in leg['passShape']['linestring'].split()]
+                move += result
+
+        return move

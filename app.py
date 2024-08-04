@@ -17,8 +17,17 @@ if 'end_text' not in st.session_state:
     st.session_state.end_text = ""
 if 'count' not in st.session_state:
     st.session_state.count = 3
-if 'marker' not in st.session_state:
-    st.session_state.marker = [37.5750599, 126.9720724]
+if 'walk' not in st.session_state:
+    st.session_state.walk = []
+if 'walk_count' not in st.session_state:
+    st.session_state.walk_count = 0
+if 'mode' not in st.session_state:
+    st.session_state.mode = 'WALK'
+if 'leg' not in st.session_state:
+    st.session_state.leg = 0
+if 'bus' not in st.session_state:
+    st.session_state.bus = False
+
 
 audio = Audio()
 gemini = Gemini()
@@ -64,7 +73,7 @@ if st.session_state.count >= 2:
     with col2:
         ## 도착지 음성 샘플
         st_write('도착지 음성 샘플', '13')
-        end_sample = st.button("광화문", key='end-sample')
+        end_sample = st.button("숭례문", key='end-sample')
         if end_sample:
             end_sample = 'sample/end.mp3'
 
@@ -89,27 +98,9 @@ def add_fg(fg, coor, color):
             )
     )
 
-if st.session_state.count >= 3:
-    st_write("3. 네비게이션 길 찾기", 22)
-
-    start = "서울 종로구 사직로8길 31 서울경찰청"
-    start_loc = navi.get_location(start)
-    end = "서울 중구 세종대로 40"
-    end_loc = navi.get_location(end)
-
-    # navi.get_optimal_route(start_loc, end_loc)
-
-    # st_write(start_loc, 15)
-    # st_write(end_loc, 15)
-    # if st.button("test", key="test"):
-    #     st.session_state.marker = [st.session_state.marker[0] + 0.00001, st.session_state.marker[1] + 0.000001]
-
-    map = folium.Map(location=[37.5750599, 126.9720724], zoom_start=17, control_scale=True)
-
-    fg = folium.FeatureGroup(name="Markers")
-
+def my_location_fg(fg):
     fg.add_child(
-        folium.CircleMarker(st.session_state.marker,
+        folium.CircleMarker(st.session_state.walk,
                     radius=7,     # 원의 반지름
                     color='red', # 원의 둘레 색상
                     fill=True,
@@ -118,17 +109,137 @@ if st.session_state.count >= 3:
                     )
     )
 
-    add_fg(fg, [37.5750599, 126.9720724], 'blue')
-    add_fg(fg, [37.5750899, 126.9720724], 'red')
-    add_fg(fg, [37.5752099, 126.9720724], 'green')
+def dumy_location():
+    walk = navi.move_coor()
+    return walk[st.session_state.walk_count][::-1]
 
-    st_folium(
-        map,
-        center=st.session_state.marker,
-        key="new",
-        feature_group_to_add=fg,
-        height=400,
-        width=700,
-    )
+def cal_traffic(traffics):
+    for traffic in traffics:
+        # 현재 위치와 다음 포인트 까지 거리 계산
+        distance = navi.haversine(
+            st.session_state.walk,
+            traffic['start']
+        )
+        distance = round(distance)
+        print(distance)
+        if distance < 5:
+            return True
+        else:
+            return False
 
-    # time.sleep(1)
+if st.session_state.count >= 3:
+    st_write("3. 네비게이션 길 찾기", 22)
+
+    start = "서울 종로구 사직로8길 31 서울경찰청"
+    start_loc = navi.get_location(start)
+    end = "서울 중구 세종대로 40"
+    end_loc = navi.get_location(end)
+
+    # 네비게이션 정보
+    navi.get_optimal_route(start_loc, end_loc)
+    traffics = navi.traffic_location()
+
+    # 지도 정보 INIT
+    map = folium.Map(location=start_loc, zoom_start=17, control_scale=True)
+    fg = folium.FeatureGroup(name="Markers")
+
+    # 출발지 마크
+    add_fg(fg, start_loc[::-1], 'blue')
+    # 도착지 마크
+    add_fg(fg, end_loc[::-1], 'red')
+    # 버스, 지하철 마크
+    for traffic in traffics:
+        if traffic['mode'] != 'WALK':
+            add_fg(fg, traffic['start'], 'green')
+
+    if st.button('걷기'):
+        st.session_state.walk_count += 1
+
+    # TODO : 테스트용 내 위치 더미 데이터
+    st.session_state.walk = dumy_location()
+
+    if st.session_state.mode == 'WALK':
+        # IP 를 이용하여 현재 위치 받아오기
+        # st.session_state.walk = navi.get_gps()
+
+        # 내위치 마크
+        my_location_fg(fg)
+
+        st_folium(
+            map,
+            center=st.session_state.walk,
+            key="new",
+            feature_group_to_add=fg,
+            height=400,
+            width=700,
+        )
+
+        distance = navi.haversine(
+            st.session_state.walk,
+            traffics[st.session_state.leg]['end']
+        )
+
+        st_write(f'{distance}m 도착 입니다.', 15)
+
+        if distance < 5:
+            st.session_state.leg += 1
+            st.session_state.mode = traffics[st.session_state.leg]['mode']
+
+    elif st.session_state.mode =='BUS':
+        st_write('4. 버스 번호 확인 (OCR with Gemini)', '22')
+        if st.session_state.bus:
+            my_location_fg(fg)
+
+            # 내위치 마크
+            my_location_fg(fg)
+
+            st_folium(
+                map,
+                center=st.session_state.walk,
+                key="new",
+                feature_group_to_add=fg,
+                height=400,
+                width=700,
+            )
+
+            distance = navi.haversine(
+                st.session_state.walk,
+                traffics[st.session_state.leg]['end']
+            )
+
+            st_write(f'{distance}m 앞 하차입니다.', 15)
+
+            if distance < 5:
+                st.session_state.leg += 1
+                st.session_state.mode = traffics[st.session_state.leg]['mode']
+
+        else:
+            col1, col2 = st.columns([7,3])
+            with col1:
+                img_file = st.file_uploader('이미지를 업로드 하세요.', type=['png', 'jpg', 'jpeg'])
+            with col2:
+                st_write('버스 이미지 샘플', '13')
+                img_sample = st.button("샘플", key='img-sample')
+                if img_sample:
+                    img_sample = 'sample/bus.jpeg'
+
+            if img_file:
+                bus_num = 0
+                with open(('data/bus.jpeg'), 'wb') as f:
+                    f.write(img_file.getbuffer()) # 해당 내용은 Buffer로 작성하겠다.
+                bus_num = gemini.image('data/bus.jpeg')
+
+                if bus_num in traffics[st.session_state.leg]['route']:
+                    st_write(f'{bus_num} 번 버스 탑습 입니다.', 15)
+                    st.session_state.bus = True
+                else:
+                    st_write(f'{bus_num} 번 버스는 탑승 버스가 아닙니다.', 15)
+
+            if img_sample:
+                bus_num = gemini.image('sample/bus.jpeg')
+                print(bus_num, traffics[st.session_state.leg]['route'])
+                if bus_num in traffics[st.session_state.leg]['route']:
+                    st_write(f'{bus_num} 번 버스 탑습 입니다.', 15)
+                    st.session_state.bus = True
+
+
