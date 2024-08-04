@@ -73,15 +73,17 @@ class Navigation:
             "endY": end[1]
         }
 
-        # TODO : Real data
-        # response = requests.post(url, headers=headers, json=data)
-        # data = response.json()
-
-        # Test
-        data = file
+        try:
+            # TODO : Real data
+            response = requests.post(url, headers=headers, json=data)
+            data = response.json()
+        except Exception as e:
+            # Test
+            data = file
 
         self.turn_point = []
         self.turn_point = data['metaData']['plan']['itineraries'][0]['legs']
+        return self.turn_point
 
     def haversine(self, coord1, coord2):
         # 지구의 반지름 (킬로미터 단위)
@@ -128,9 +130,9 @@ class Navigation:
         else:
             return "직진"
 
-    def traffic_location(self):
+    def traffic_location(self, turn_point):
         traffic = []
-        for leg in self.turn_point:
+        for leg in turn_point:
             route = ''
             if leg['mode'] == 'BUS':
                 route = leg['route']
@@ -142,14 +144,14 @@ class Navigation:
             }]
         return traffic
 
-    def move_coor(self):
+    def move_coor(self, turn_point):
         '''
         테스트용 함수.
         실제로 걸어가면서 테스트 할 수 없기 때문에 네비게이션 데이터에서
         이동하는 좌표들을 모아 내 위치를 표시
         '''
         move = []
-        for leg in self.turn_point:
+        for leg in turn_point:
             linestring = []
             if leg['mode'] == 'WALK':
                 for step in leg['steps']:

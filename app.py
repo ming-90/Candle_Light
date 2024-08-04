@@ -16,7 +16,7 @@ if 'start_text' not in st.session_state:
 if 'end_text' not in st.session_state:
     st.session_state.end_text = ""
 if 'count' not in st.session_state:
-    st.session_state.count = 3
+    st.session_state.count = 1
 if 'walk' not in st.session_state:
     st.session_state.walk = []
 if 'walk_count' not in st.session_state:
@@ -27,6 +27,8 @@ if 'leg' not in st.session_state:
     st.session_state.leg = 0
 if 'bus' not in st.session_state:
     st.session_state.bus = False
+if 'turn_point' not in st.session_state:
+    st.session_state.turn_point = []
 
 
 audio = Audio()
@@ -110,7 +112,7 @@ def my_location_fg(fg):
     )
 
 def dumy_location():
-    walk = navi.move_coor()
+    walk = navi.move_coor(st.session_state.turn_point)
     return walk[st.session_state.walk_count][::-1]
 
 def cal_traffic(traffics):
@@ -136,8 +138,9 @@ if st.session_state.count >= 3:
     end_loc = navi.get_location(end)
 
     # 네비게이션 정보
-    navi.get_optimal_route(start_loc, end_loc)
-    traffics = navi.traffic_location()
+    if st.session_state == []:
+        st.session_state.turn_point = navi.get_optimal_route(start_loc, end_loc)
+    traffics = navi.traffic_location(st.session_state.turn_point)
 
     # 지도 정보 INIT
     map = folium.Map(location=start_loc, zoom_start=17, control_scale=True)
@@ -156,7 +159,11 @@ if st.session_state.count >= 3:
         st.session_state.walk_count += 1
 
     # TODO : 테스트용 내 위치 더미 데이터
-    st.session_state.walk = dumy_location()
+    try:
+        st.session_state.walk = dumy_location()
+    except IndexError as e:
+        st.session_state.mode = 'END'
+        st_write("도착지에 도착했습니다.", 15)
 
     if st.session_state.mode == 'WALK':
         # IP 를 이용하여 현재 위치 받아오기
